@@ -1,0 +1,35 @@
+# Starts Postgres and the API together. `docker compose up --build` uses this file.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: stivos
+      POSTGRES_PASSWORD: stivos
+      POSTGRES_DB: stivos
+    ports:
+      # Mac port 5433, because 5432 is already taken. Inside Docker the port is 5432.
+      - "5433:5432"
+    volumes:
+      # Keeps the database data after the container stops.
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stivos -d stivos"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  api:
+    build: .
+    ports:
+      # Mac port 8001, because Supabase is already using 8000.
+      - "8001:8000"
+    environment:
+      # Host name "db" is the service above, not localhost.
+      DATABASE_URL: postgresql+psycopg://stivos:stivos@db:5432/stivos
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

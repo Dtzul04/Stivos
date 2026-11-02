@@ -1,0 +1,1 @@
+# Keeps tests/ in git. Git does not save an empty folder. Test files will replace this.

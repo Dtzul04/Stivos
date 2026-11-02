@@ -1,0 +1,14 @@
+# Web framework.
+fastapi==0.162.0
+# Server that runs the FastAPI app. [standard] adds the usual extras.
+uvicorn[standard]==0.54.0
+# Turns Python classes into database tables.
+sqlmodel==0.0.48
+# Driver that talks to Postgres. [binary] means there is no compile step.
+psycopg[binary]==3.3.6
+# Checks the shape of data going in and out. SQLModel is built on this.
+pydantic==2.14.2
+# Runs tests.
+pytest==9.2.0
+# HTTP client tests use to call the API.
+httpx==0.28.1
