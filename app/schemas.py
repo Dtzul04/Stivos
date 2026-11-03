@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from app.models import BookingStatus
+from pydantic import BaseModel, ConfigDict
 
 
 class ClassRead(BaseModel):
@@ -13,3 +14,18 @@ class ClassRead(BaseModel):
     capacity: int
     # Calculated in the route. It is not stored as its own column.
     spots_remaining: int
+
+class BookingCreate(BaseModel):
+    student_id: int
+    class_id: int
+    
+class BookingRead(BaseModel):
+    # Lets FastAPI read the fields off the database row.
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    student_id: int
+    class_id: int
+    status: BookingStatus
+    created_at: datetime
+
