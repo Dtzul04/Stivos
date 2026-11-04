@@ -8,7 +8,11 @@ from app.models import Booking, BookingStatus, Class, Student
 
 
 def book_student(session: Session, student_id: int, class_id: int) -> Booking:
-    dance_class = session.get(Class, class_id)
+    # Lock this class until commit. A second booking for the same class waits,
+    # then counts again, so two requests cannot both take the last spot.
+    dance_class = session.exec(
+        select(Class).where(Class.id == class_id).with_for_update()
+    ).one_or_none()
     student = session.get(Student, student_id)
     if dance_class is None or student is None:
         raise HTTPException(status_code=404, detail="Class or student not found")
@@ -39,6 +43,12 @@ def cancel_booking(session: Session, booking_id: int) -> Booking | None:
     # Cancelling twice must not promote a second person.
     if booking.status == BookingStatus.cancelled:
         return booking
+
+    # Same class lock as booking. Two cancels wait in line, so each freed spot
+    # promotes a different waiting student.
+    session.exec(
+        select(Class).where(Class.id == booking.class_id).with_for_update()
+    ).one()
 
     held_a_spot = booking.status == BookingStatus.booked
     booking.status = BookingStatus.cancelled

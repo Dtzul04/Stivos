@@ -24,6 +24,14 @@ On this Mac, port 8000 and port 5432 are already taken. The app is on **8001**. 
 
 Press Ctrl+C to stop the log. `docker compose down` stops the containers and keeps the data. `docker compose down -v` deletes the database too.
 
+With the stack already running, the booking tests are:
+
+```bash
+docker compose exec api pytest
+```
+
+A code change is copied into the image only when it is built, so run `docker compose up --build -d` before that command after you edit the app or the tests.
+
 ## What you should see
 
 `GET /health` returns `{"status": "ok"}`.
