@@ -6,6 +6,14 @@ from app.models import BookingStatus
 from pydantic import BaseModel, ConfigDict
 
 
+class StudentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: str
+
+
 class ClassRead(BaseModel):
     id: int
     name: str

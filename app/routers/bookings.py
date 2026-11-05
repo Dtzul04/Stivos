@@ -1,13 +1,19 @@
 """Routes that create and change bookings."""
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.db import get_session
+from app.models import Booking
 from app.schemas import BookingCreate, BookingRead
 from app.services.booking import book_student, cancel_booking
 
 router = APIRouter(tags=["bookings"])
+
+
+@router.get("/bookings", response_model=list[BookingRead])
+def list_bookings(session: Session = Depends(get_session)) -> list[Booking]:
+    return list(session.exec(select(Booking).order_by(Booking.created_at)).all())
 
 
 @router.post("/bookings", response_model=BookingRead)

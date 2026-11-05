@@ -10,3 +10,7 @@ venv/
 *.db
 
 .DS_Store
+
+# The website's installed libraries and build output.
+node_modules/
+web/dist/

@@ -3,10 +3,11 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.db import create_db_and_tables, engine
-from app.routers import bookings, classes
+from app.routers import bookings, classes, students
 
 
 # Code before yield runs at startup. Code after yield runs at shutdown.
@@ -22,7 +23,15 @@ async def lifespan(app: FastAPI):
 
 # title is the name shown on the /docs page.
 app = FastAPI(title="Stivos", lifespan=lifespan)
+# The Vite page runs on another port, so the browser asks permission before calling the API.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(classes.router)
+app.include_router(students.router)
 app.include_router(bookings.router)
 
 
