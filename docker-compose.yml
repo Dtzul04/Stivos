@@ -26,7 +26,7 @@ services:
       - "8001:8000"
     environment:
       # Host name "db" is the service above, not localhost.
-      DATABASE_URL: postgresql+psycopg://stivos:stivos@db:5432/stivos
+      DATABASE_URL: ${DATABASE_URL}
     depends_on:
       db:
         condition: service_healthy

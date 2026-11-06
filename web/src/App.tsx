@@ -34,6 +34,16 @@ async function readError(response: Response): Promise<string> {
   }
 }
 
+function formatWhen(iso: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
+
 export default function App() {
   const [classes, setClasses] = useState<DanceClass[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -112,56 +122,88 @@ export default function App() {
   const openBookings = bookings.filter((booking) => booking.status !== "cancelled");
 
   return (
-    <main>
-      <h1>Stivos</h1>
-      <p>Pick a student, book a class, or cancel a spot.</p>
+    <div className="shell">
+      <header className="brand">
+        <h1>Stivos</h1>
+        <p>The next big thing, for the long term.</p>
+      </header>
+
       {error ? <p className="error">{error}</p> : null}
 
-      <label>
-        Student
-        <select
-          value={studentId}
-          onChange={(event) => setStudentId(Number(event.target.value))}
-        >
-          {students.map((student) => (
-            <option key={student.id} value={student.id}>
-              {student.name}
-            </option>
+      <section className="panel" aria-labelledby="who-heading">
+        <h2 id="who-heading">Who is booking</h2>
+        <p className="panel-lead">Choose the student for the next Book click.</p>
+        <label className="field">
+          Student
+          <select
+            value={studentId}
+            onChange={(event) => setStudentId(Number(event.target.value))}
+          >
+            {students.map((student) => (
+              <option key={student.id} value={student.id}>
+                {student.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      <section className="panel" aria-labelledby="classes-heading">
+        <h2 id="classes-heading">Classes</h2>
+        <p className="panel-lead">Open spots fill first. A full class waitlists you.</p>
+        <ul className="list">
+          {classes.map((danceClass, index) => (
+            <li
+              key={danceClass.id}
+              className="row"
+              style={{ animationDelay: `${0.04 * index}s` }}
+            >
+              <strong>{danceClass.name}</strong>
+              <span className="meta">
+                {danceClass.instructor} · {formatWhen(danceClass.start_time)} ·{" "}
+                {danceClass.spots_remaining} of {danceClass.capacity} left
+              </span>
+              <button
+                type="button"
+                className="primary"
+                disabled={busy || studentId === ""}
+                onClick={() => book(danceClass.id)}
+              >
+                Book
+              </button>
+            </li>
           ))}
-        </select>
-      </label>
+        </ul>
+      </section>
 
-      <h2>Classes</h2>
-      <ul>
-        {classes.map((danceClass) => (
-          <li key={danceClass.id}>
-            <strong>{danceClass.name}</strong>
-            <span>
-              {danceClass.instructor} · {danceClass.spots_remaining} of {danceClass.capacity} spots
-              left
-            </span>
-            <button type="button" disabled={busy || studentId === ""} onClick={() => book(danceClass.id)}>
-              Book
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <h2>Bookings</h2>
-      {openBookings.length === 0 ? <p>No bookings yet.</p> : null}
-      <ul>
-        {openBookings.map((booking) => (
-          <li key={booking.id}>
-            <strong>{studentName.get(booking.student_id) ?? "Student"}</strong>
-            <span>
-              {className.get(booking.class_id) ?? "Class"} · {booking.status}
-            </span>
-            <button type="button" disabled={busy} onClick={() => cancel(booking.id)}>
-              Cancel
-            </button>
-          </li>
-        ))}
-      </ul>
-    </main>
+      <section className="panel" aria-labelledby="bookings-heading">
+        <h2 id="bookings-heading">Bookings</h2>
+        <p className="panel-lead">Cancel a booked spot to promote the oldest waitlisted student.</p>
+        {openBookings.length === 0 ? <p className="empty">No bookings yet.</p> : null}
+        <ul className="list">
+          {openBookings.map((booking, index) => (
+            <li
+              key={booking.id}
+              className="row"
+              style={{ animationDelay: `${0.04 * index}s` }}
+            >
+              <strong>{studentName.get(booking.student_id) ?? "Student"}</strong>
+              <span className="meta">
+                {className.get(booking.class_id) ?? "Class"}
+                <span className={`status ${booking.status}`}>{booking.status}</span>
+              </span>
+              <button
+                type="button"
+                className="ghost"
+                disabled={busy}
+                onClick={() => cancel(booking.id)}
+              >
+                Cancel
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   );
 }
