@@ -1,5 +1,6 @@
 """Front door of the API. Creates the app, checks Postgres, and attaches the routes."""
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -21,15 +22,26 @@ async def lifespan(app: FastAPI):
     yield
 
 
+# Local Vite ports, plus any origins listed in CORS_ORIGINS (comma-separated).
+# Example on Railway: CORS_ORIGINS=https://stivos.vercel.app
+cors_origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    *[
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "").split(",")
+        if origin.strip()
+    ],
+]
+
 # title is the name shown on the /docs page.
 app = FastAPI(title="Stivos", lifespan=lifespan)
-# The Vite page runs on another port, so the browser asks permission before calling the API.
+# The browser page runs on another host, so it must be listed here.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-    ],
+    allow_origins=cors_origins,
+    # Vercel preview and production hosts until a custom domain is set.
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
