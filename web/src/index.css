@@ -228,6 +228,16 @@ button.ghost:hover:not(:disabled) {
   animation: rise 0.4s ease both;
 }
 
+/* Success feedback in the live region (text + left border, not color alone). */
+.status-msg {
+  margin: 1rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  animation: rise 0.4s ease both;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
