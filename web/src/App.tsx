@@ -50,6 +50,8 @@ export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [studentId, setStudentId] = useState<number | "">("");
   const [error, setError] = useState<string | null>(null);
+  // Success text shown and announced to screen readers.
+  const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -84,6 +86,7 @@ export default function App() {
     }
     setBusy(true);
     setError(null);
+    setStatus(null);
     try {
       const response = await fetch(`${API}/bookings`, {
         method: "POST",
@@ -93,9 +96,14 @@ export default function App() {
       if (!response.ok) {
         throw new Error(await readError(response));
       }
+      // Tell the live region what happened so assistive tech can announce it.
+      const booking = (await response.json()) as Booking;
+      const classLabel = classes.find((c) => c.id === classId)?.name ?? "class";
+      setStatus(`Booked ${classLabel}. Status: ${booking.status}.`);
       await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Booking failed.");
+      setStatus(null);
     } finally {
       setBusy(false);
     }
@@ -104,14 +112,18 @@ export default function App() {
   async function cancel(bookingId: number) {
     setBusy(true);
     setError(null);
+    setStatus(null);
     try {
       const response = await fetch(`${API}/bookings/${bookingId}/cancel`, { method: "POST" });
       if (!response.ok) {
         throw new Error(await readError(response));
       }
+      // Same live-region update after a successful cancel.
+      setStatus("Booking cancelled.");
       await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Cancel failed.");
+      setStatus(null);
     } finally {
       setBusy(false);
     }
@@ -128,7 +140,15 @@ export default function App() {
         <p>The next big thing, for the long term.</p>
       </header>
 
-      {error ? <p className="error">{error}</p> : null}
+      {/* Live region: screen readers announce text changes here without moving focus. */}
+      <div
+        role={error ? "alert" : "status"}
+        aria-live={error ? "assertive" : "polite"}
+        aria-atomic="true"
+        className={error ? "error" : status ? "status-msg" : undefined}
+      >
+        {error ?? status}
+      </div>
 
       <section className="panel" aria-labelledby="who-heading">
         <h2 id="who-heading">Who is booking</h2>
@@ -166,6 +186,8 @@ export default function App() {
               <button
                 type="button"
                 className="primary"
+                // Clearer name for screen readers than just "Book".
+                aria-label={`Book ${danceClass.name}`}
                 disabled={busy || studentId === ""}
                 onClick={() => book(danceClass.id)}
               >
@@ -195,6 +217,8 @@ export default function App() {
               <button
                 type="button"
                 className="ghost"
+                // Includes student + class so "Cancel" is not ambiguous.
+                aria-label={`Cancel booking for ${studentName.get(booking.student_id) ?? "student"} in ${className.get(booking.class_id) ?? "class"}`}
                 disabled={busy}
                 onClick={() => cancel(booking.id)}
               >
